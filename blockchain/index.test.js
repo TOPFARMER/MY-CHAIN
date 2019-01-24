@@ -1,4 +1,4 @@
-const Blockchain = require('./blockchain');
+const Blockchain = require('.');
 const Blcok = require('./block');
 
 describe('Blockchain', () => {
@@ -36,5 +36,19 @@ describe('Blockchain', () => {
         bc2.chain[1].data = 'Not foo';
 
         expect(bc.isValidChain(bc2.chain)).toBe(false);
+    });
+
+    it('replaces the chain with a valid chain', () => {
+        bc2.addBlock('goo');
+        bc.replaceChain(bc2.chain);
+
+        expect(bc.chain).toEqual(bc2.chain);
+    });
+
+    it('does not replace the chain with one of less or equal to length', () => {
+        bc.addBlock('foo');
+        bc.replaceChain(bc2.chain);
+
+        expect(bc.chain).not.toEqual(bc2.chain);
     });
 });
