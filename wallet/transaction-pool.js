@@ -24,12 +24,15 @@ class TransactionPool {
 
     validTransactions() {
         return this.transactions.filter(transaction => {
+            // should have a constraint that the number come from a transaction 
+            // should be in num type not other type like string
             const outputTotal = transaction.outputs.reduce((total, output) => {
                 return total + output.amount;
             }, 0);
 
             if(transaction.input.amount !== outputTotal) {
-                console.log(`Invalid transaction from ${transaction.input.address}.`);
+                console.log(`Invalid transaction from ${transaction.input.address}. 
+                total: ${outputTotal} input: ${transaction.input.amount}`);
                 return;
             }
 
@@ -40,6 +43,10 @@ class TransactionPool {
 
             return transaction;
         });
+    }
+
+    clear() {
+        this.transactions = [];
     }
 }
 
