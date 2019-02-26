@@ -6,7 +6,7 @@ const MESSAGE_TYPES = {
     clear_transaction: 'CLEAR_TRANSACTION'
 }
 
-const P2P_PORT = process.env.P2P_PORT || 5001;
+const P2P_PORT = process.env.P2P_PORT || 5000;
 const peers = process.env.PEERS ? process.env.PEERS.split(',') : [];
 
 class P2pServer {
