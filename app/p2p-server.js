@@ -43,6 +43,9 @@ class P2pServer {
     peers.forEach(peer => {
       const socket = new Websocket(peer);
 
+      socket.on('error', () => {
+        console.log(`an error accur in connecting with peer: ${peer.substring(5, peer.length - 5)}`);
+      });
       socket.on('open', () => this.connectSocket(socket));
     });
   }
