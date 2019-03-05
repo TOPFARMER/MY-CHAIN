@@ -54,5 +54,9 @@ app.get('/public-key', (req,res) => {
   res.json({ publicKey: wallet.publicKey });
 });
 
+app.get('/ip', (req,res) => {
+  res.json(p2pServer.peers);
+});
+
 app.listen(HTTP_PORT, () => console.log(`Listening on port ${HTTP_PORT}`));
 p2pServer.listen();

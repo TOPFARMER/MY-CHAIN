@@ -6,4 +6,5 @@ const NODES_IP = [
         '192.168.99.102',
         '192.168.99.103'
       ]
-module.exports = { DIFFICULTY, MINE_RATE, INITIAL_BALANCE, MINING_REWARD, NODES_IP };
+const SERVICE_NAME = 'tasks.mychain_web';
+module.exports = { DIFFICULTY, MINE_RATE, INITIAL_BALANCE, MINING_REWARD, NODES_IP, SERVICE_NAME };
