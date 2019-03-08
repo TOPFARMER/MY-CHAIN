@@ -1,6 +1,5 @@
 const WebSocket = require('ws');
 const ip = require('ip');
-const WaitPort = require('wait-port');
 
 const SERVICE_IP = '149.129.116.62';
 const LISTENING_PORT = 30000;
@@ -23,37 +22,30 @@ class PeersDiscovery {
     console.log(`Listening for peers connection on port: ${ LISTENING_PORT }`);
   }
 
-  discover() {
-    // waiting for the peers recording service ready
-    WaitPort({
-      host: SERVICE_IP,
-      port: LISTENING_PORT,
-    }).then((open) => {
-      if(open) {
-        console.log('Discovry server is available')
-
-        const socket = new WebSocket('ws://' + SERVICE_IP + ':' + LISTENING_PORT);
-        
-        socket.on('error', () => {
-          console.log(`an error accur when connecting to discovery server`);
-        });
-        socket.on('open', () => {
-          this.sendIdentification(socket);
-          this.messageHandler(socket);
-        });
-      }
-      else console.log('Discovery server is not running before timeout...');
-    }).catch((err) => {
-      console.err(`An unknown error occured while waiting for the port: ${err}`)
+  // callback function updateP2pserver in order to get the peers list
+  // inside this discover function
+  discover(updateP2pserver) {
+    const socket = new WebSocket('ws://' + SERVICE_IP + ':' + LISTENING_PORT);
+    
+    socket.on('error', () => {
+      console.log(`an error accur when connecting to discovery server`);
+    });
+    socket.on('open', () => {
+      this.sendIdentification(socket);
+      this.messageHandler(socket, updateP2pserver);
     });
   }
 
-  messageHandler(socket) {
+  messageHandler(socket, updateP2pserver) {
   socket.on('message', message => {
       const data = JSON.parse(message);
       switch(data.type) {
         case MESSAGE_TYPES.peer_connect:
           this.peers.push({ ip: data.ip, socket});
+          // print peers list
+          console.log(`New node: ${data.ip} connected.\n
+            Now we have:\n
+            ${JSON.stringify(this.peers.map(peer => peer.ip))}`);
           this.sendPeersList(data.ip ,socket);
           break;
         case MESSAGE_TYPES.peer_leave:
@@ -62,6 +54,9 @@ class PeersDiscovery {
           break;
         case MESSAGE_TYPES.peers_list:
           this.updatePeersList(data.list);
+          console.log(`Now we receive peers info:\n
+            ${JSON.stringify(data.list.map(peer => peer.ip))}`);
+            updateP2pserver(data.list.map(peer => peer.ip));
           break;
       }
     });

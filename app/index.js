@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const WaitPort = require('wait-port');
 const Blockchain = require('../blockchain');
 const P2pServer = require('./p2p-server');
 const Wallet = require('../wallet');
@@ -58,5 +59,19 @@ app.get('/ip', (req,res) => {
   res.json(p2pServer.peers);
 });
 
-app.listen(HTTP_PORT, () => console.log(`Listening on port ${HTTP_PORT}`));
-p2pServer.listen();
+
+// waiting for the peers recording service ready
+WaitPort({
+  host: '149.129.116.62',
+  port: 30000,
+}).then((open) => {
+  if(open) {
+    console.log('Discovery server is available\nMychain is running')
+
+    app.listen(HTTP_PORT, () => console.log(`Listening on port ${HTTP_PORT}`));
+    p2pServer.listen();
+  }
+  else console.log('Discovery server is not running before timeout...');
+}).catch((err) => {
+  console.err(`An unknown error occured while waiting for the port: ${err}`)
+});

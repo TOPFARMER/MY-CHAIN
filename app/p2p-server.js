@@ -21,30 +21,36 @@ class P2pServer {
 
   listen() {
     const server = new Websocket.Server({ port: P2P_PORT });
-    server.on('connection', socket => this.connectSocket(socket));
+    server.on('connection', (socket, req) => this.connectSocket(req.connection.remoteAddress ,socket));
 
-    this.peerDiscovery.discover();  //peer discovery is listening to the discovery server
     this.connectToPeers();
 
     console.log(`Listening for peers-to-peers connections on: ${P2P_PORT}`);
   }
 
   connectToPeers() {
-    this.peers = this.peerDiscovery.peers
-      .map(peer => "ws://" + peer.ip + ":" + P2P_PORT);
+    //peer discovery is listening to the discovery server
+    this.peerDiscovery.discover(peers => {
+      this.peers = peers.map(peer => new Object({
+        ip: peer,
+        socket: null
+      }));
 
-    this.peers.forEach(peer => {
-      const socket = new Websocket(peer);
+      console.log(`peers: \n ${JSON.stringify(this.peers)}`);
 
-      socket.on('error', () => {console
-        .log(`an error accur in connecting with peer: ${peer.substring(5, peer.length - 5)}`)});
-      socket.on('open', () => this.connectSocket(socket));
-    });
+      peers.map(peer => "ws://" + peer + ":" + P2P_PORT).forEach(peer => {
+        const socket = new Websocket(peer);
+  
+        socket.on('error', () => {console
+          .log(`an error accur in connecting with peer: ${peer.substring(5, peer.length - 5)}`)});
+        socket.on('open', () => this.connectSocket(ip ,socket));
+      });
+    }); 
   }
 
-  connectSocket(socket) {
-    this.sockets.push(socket);
-    console.log('Socket connected');
+  connectSocket(ip ,socket) {
+    this.peers.find(peer => peer.ip === ip).socket = socket;
+    console.log(`Socket:${ip} connected`);
 
     this.messageHandler(socket);
     this.sendChain(socket);
@@ -87,27 +93,18 @@ class P2pServer {
   }
 
   syncChain() {
-    this.sockets.forEach(socket => this.sendChain(socket));
+    this.peers.forEach(peer => this.sendChain(peer.socket));
   }
 
   broadcastTransaction(transaction) {
-    this.sockets.forEach(socket => this.sendTransaction(socket, transaction));
+    this.peers.forEach(peer => this.sendTransaction(peer.socket, transaction));
   }
 
   broadcastClearTransactions() {
-    this.sockets.forEach(socket => socket.send(JSON.stringify({
+    this.peers.forEach(peer => peer.socket.send(JSON.stringify({
       type: MESSAGE_TYPES.clear_transaction
     })));
   }
 }
 
 module.exports = P2pServer;
-
-//   const hostIp = Ip.address();
-//   const OtherNodesIp = NODES_IP.filter(ip => ip !== hostIp);
-//   return OtherNodesIp.map(ws_address => {
-//     ws_address = "ws://" + ws_address + ":" + P2P_PORT;
-//   });
-// };
-// const peers = NODES_IP.filter(ip => ip !== Ip.address())
-//         .map(ws_address => "ws://" + ws_address + ":" + P2P_PORT);
