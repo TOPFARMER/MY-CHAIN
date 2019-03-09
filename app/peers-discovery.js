@@ -1,5 +1,7 @@
 const WebSocket = require('ws');
-const ip = require('ip');
+const fs = require('fs');
+const containerInfo = fs.readFileSync('/etc/hosts', 'utf8');
+const containerIP = containerInfo.toString().split(/[\s\n]/)[14];
 
 const SERVICE_IP = '149.129.116.62';
 const LISTENING_PORT = 30000;
@@ -65,7 +67,7 @@ class PeersDiscovery {
   sendIdentification(socket) {
     socket.send(JSON.stringify({
       type: MESSAGE_TYPES.peer_connect,
-      ip: ip.address()
+      ip: containerIP
     }));
   }
 
