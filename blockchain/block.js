@@ -1,7 +1,22 @@
 const ChainUtil = require('../chain-util');
 const { DIFFICULTY, MINE_RATE } = require('../chain-config');
 
+/**
+ *
+ * 
+ * @class Block
+ */
 class Block {
+  /**
+   * 创建区块实例
+   * @param {*} timestamp - 时间戳
+   * @param {*} lastHash - 前一区块哈希
+   * @param {*} hash - 当前区块哈希
+   * @param {*} data - 区块数据
+   * @param {*} nonce - POW算法枚举量
+   * @param {*} difficulty - 区块生成难度
+   * @memberof Block
+   */
   constructor(timestamp, lastHash, hash, data, nonce, difficulty) {
     this.timestamp = timestamp;
     this.lastHash = lastHash;
@@ -10,7 +25,7 @@ class Block {
     this.nonce = nonce;
     this.difficulty = difficulty || DIFFICULTY;
   }
-
+  
   toString() {
     return `Block -
     Timestamp : ${this.timestamp}

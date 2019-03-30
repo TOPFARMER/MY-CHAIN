@@ -7,8 +7,8 @@ const mDNS_PORT = 27494;
 
 const MESSAGE_TYPES = {
   chain: 'CHAIN',
-  transaction: 'TRANSACTION',
-  clear_transaction: 'CLEAR_TRANSACTION'
+  comment: 'TRANSACTION',
+  clear_comment: 'CLEAR_TRANSACTION'
 }
 
 const P2P_PORT = process.env.P2P_PORT || 5000;
@@ -27,9 +27,9 @@ const P2P_PORT = process.env.P2P_PORT || 5000;
 //         .map(ws_address => "ws://" + ws_address + ":" + P2P_PORT);
 
 class P2pServer {
-  constructor(blockchain, transactionPool) {
+  constructor(blockchain, commentPool) {
     this.blockchain = blockchain;
-    this.transactionPool = transactionPool;
+    this.commentPool = commentPool;
     this.sockets = [];
     this.peers = [];
   }
@@ -83,11 +83,11 @@ class P2pServer {
         case MESSAGE_TYPES.chain:
           this.blockchain.replaceChain(data.chain);
           break;
-        case MESSAGE_TYPES.transaction :
-          this.transactionPool.updateOrAddTransaction(data.transaction);
+        case MESSAGE_TYPES.comment :
+          this.commentPool.updateOrAddComment(data.comment);
           break;
-        case MESSAGE_TYPES.clear_transaction :
-          this.transactionPool.clear();
+        case MESSAGE_TYPES.clear_comment :
+          this.commentPool.clear();
           break;
       }
     });
@@ -100,15 +100,15 @@ class P2pServer {
     }));
   }
 
-  sendTransaction(socket, transaction) {
+  sendComment(socket, comment) {
     socket.send(JSON.stringify({
-      type: MESSAGE_TYPES.transaction,
+      type: MESSAGE_TYPES.comment,
       // es6 (key: value) shorthand
       // with property value shorthand
       // syntax, you can omit the property
       // value if key matches variable
       // name
-      transaction
+      comment
     }));
   }
 
@@ -116,13 +116,13 @@ class P2pServer {
     this.sockets.forEach(socket => this.sendChain(socket));
   }
 
-  broadcastTransaction(transaction) {
-    this.sockets.forEach(socket => this.sendTransaction(socket, transaction));
+  broadcastComment(comment) {
+    this.sockets.forEach(socket => this.sendComment(socket, comment));
   }
 
-  broadcastClearTransactions() {
+  broadcastClearComments() {
     this.sockets.forEach(socket => socket.send(JSON.stringify({
-      type: MESSAGE_TYPES.clear_transaction
+      type: MESSAGE_TYPES.clear_comment
     })));
   }
 }
