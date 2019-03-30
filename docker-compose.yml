@@ -1,0 +1,19 @@
+version: "3"
+services:
+  web:
+    image: www.chashao.gq/mychain
+    deploy:
+      replicas: 4
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 50M
+    ports:
+      - "3000:3000"
+      - "5000:5000"
+    networks:
+      - webnet
+networks:
+  webnet:
