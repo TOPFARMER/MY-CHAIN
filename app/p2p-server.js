@@ -21,7 +21,11 @@ class P2pServer {
 
   listen() {
     const server = new Websocket.Server({ port: P2P_PORT });
-    server.on('connection', (socket, req) => this.connectSocket(req.connection.remoteAddress ,socket));
+
+    // req.connection.remoteAddress return an ipv6 address
+    // which map an ipv4 address to ::ffff:[ipv4_address]
+    server.on('connection', (socket, req) => 
+      this.connectSocket(socket, req.connection.remoteAddress.substring(7)));
 
     this.connectToPeers();
 
@@ -31,26 +35,29 @@ class P2pServer {
   connectToPeers() {
     //peer discovery is listening to the discovery server
     this.peerDiscovery.discover(peers => {
-      this.peers = peers.map(peer => new Object({
-        ip: peer,
-        socket: null
-      }));
+      
 
       console.log(`peers: \n ${JSON.stringify(this.peers)}`);
 
-      peers.map(peer => "ws://" + peer + ":" + P2P_PORT).forEach(peer => {
-        const socket = new Websocket(peer);
+      peers.forEach(peer => {
+        const ws_address = "ws://" + peer + ":" + P2P_PORT;
+        const socket = new Websocket(ws_address);
   
         socket.on('error', () => {console
-          .log(`an error accur in connecting with peer: ${peer.substring(5, peer.length - 5)}`)});
-        socket.on('open', () => this.connectSocket(ip ,socket));
+          .log(`an error accur in connecting with peer: ${peer}`)});
+        socket.on('open', () => this.connectSocket(socket, peer));
       });
     }); 
   }
 
-  connectSocket(ip ,socket) {
-    this.peers.find(peer => peer.ip === ip).socket = socket;
+  connectSocket(socket, ip) {
+    this.peers.push(new Object({
+      ip,
+      socket
+    }));
+
     console.log(`Socket:${ip} connected`);
+
 
     this.messageHandler(socket);
     this.sendChain(socket);
